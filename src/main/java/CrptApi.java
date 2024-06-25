@@ -23,6 +23,9 @@ import java.util.logging.Logger;
 public class CrptApi {
     private static final Logger logger = Logger.getLogger(CrptApi.class.getName());
     private static final String API_URL = "https://ismp.crpt.ru/api/v3/lk/documents/create";
+    private static final int INITIAL_DELAY = 1;
+    private static final int PERIOD = 1;
+    private static final int POOL_SIZE = 1;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final Semaphore semaphore;
@@ -43,7 +46,7 @@ public class CrptApi {
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
         this.semaphore = new Semaphore(requestLimit);
-        this.scheduler = Executors.newScheduledThreadPool(1);
+        this.scheduler = Executors.newScheduledThreadPool(POOL_SIZE);
         this.requestQueue = new LinkedBlockingQueue<>();
         startReleaseSemaphore();
     }
@@ -60,7 +63,7 @@ public class CrptApi {
                     task.run();
                 }
             }
-        }, 1, 1, timeUnit);
+        }, INITIAL_DELAY, PERIOD, timeUnit);
     }
 
     public interface DocumentClient {
